@@ -1,0 +1,24 @@
+#+TITLE: BlueOrtho assignment
+
+* Installation
+
+Head to projects root and install Python requirements with:
+
+    #+BEGIN_SRC sh
+    pip install -r requirements.txt
+    #+END_SRC
+
+* Usage
+
+Head to ~src~ directory and train all models using:
+
+    #+BEGIN_SRC sh
+    python train_all.py -i <path/to/data.dmp -o <path/to/runs> --cuda
+    #+END_SRC
+
+The optional ~cuda~ flag sets the use of a GPU, and the ~path/to/runs~, where logs and checkpoints are stored, will be created if it does not exist.
+
+To compute performance measures and generate image previews on the test set, run:
+    #+BEGIN_SRC sh
+    python test_and_plot.py -i <path/to/data.dmp> -r /path/to/runs/bce -r /path/to/runs/dice -n BCE -n Dice
+    #+END_SRC
