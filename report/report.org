@@ -84,10 +84,10 @@ In particular, we set the Dice-loss to:
 \]
 
 where $y$ and $\hat{y}$ are the true and predicted probability tensors, respectively,
-and $s$ is a smoothness coefficient that avoids unstability of gradients when
-the denominator is small.
+$s$ is a smoothness coefficient that avoids unstability of gradients when
+the denominator is small, and $\odot$ is the element-wise multiplication operator.
 
-** Training details
+** Training details and implementation
 
 To optimize the parameters of our model, we follow the standard stochastic gradient descent
 approach.
@@ -100,6 +100,8 @@ We set the total number of epochs to $20$ by observing the convergence of the lo
 on the validation set.
 
 Our model trains in $\sim 14$ minutes on a 6-core/2.8GHz CPU.
+
+Our algorithms are implemented in PyTorch, and the code is available at [[https://github.com/lejeunel/blueortho_hw]].
 
 * Results
 
@@ -128,11 +130,11 @@ Our architecture proved to be both lightweight, computationally efficient and
 provides good results.
 In particular, we note that the Dice-loss is an interesting alternative to the
 standard BCE-loss in this scenario. It is justified by the fact that it corresponds
-to a metric that is directly interpretable, while it produces sharper and cleaner predictions.
+to a metric that is directly interpretable, and produces visually sharper and cleaner predictions.
 
 As potential improvements, one could explore the use of Atlases \cite{vakalopoulou18},
 where one pre-defines a set of shapes that the network must adapt using deformation operators.
-This might help to improve on the ambiguous cases where the scapulae and the shoulder do
+This might help to improve on the ambiguous cases where the scapulae and the humerus do
 not show an obvious separation.
 
 
