@@ -131,8 +131,6 @@ def train(in_path: str, out_path: str, epochs: int, train_split: float,
 
     device = torch.device('cuda' if cuda else 'cpu')
     model = MySegmentationModel(coord_conv=coordconv).to(device)
-    import pdb
-    pdb.set_trace()  ## DEBUG ##
 
     # create directories
     dirs = {

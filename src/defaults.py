@@ -14,6 +14,6 @@ default_args = {
     'smooth': 0.1,
     'learning_rate': 1e-2,
     'coordconv': False,
-    'cuda:': False,
+    'cuda': False,
     'bce': False
 }

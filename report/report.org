@@ -3,7 +3,8 @@
 #+OPTIONS: toc:nil
 #+LATEX_HEADER: \usepackage{caption}
 #+LATEX_HEADER: \usepackage{subcaption}
-#+BIBLIOGRAPHY: refs plain
+#+LATEX_HEADER: \usepackage[backend=bibtex]{biblatex}
+#+LATEX_HEADER: \bibliography{refs}
 
 * Context and Goal
 
@@ -13,10 +14,16 @@ The provided dataset consists of synthetic and simplified shapes that
 represent a humerus and a scapula.
 Furthermore, the images are small ($32\times32$), and contain an important amount of noise.
 
+A preview is shown on Fig. [[fig:input_prev]]
+
+   #+NAME: fig:input_prev
+   #+CAPTION: Example image with its ground truth mask taken from the provided synthetic dataset.
+   [[./input_prev.png]]
+
 * Method
 
 For this exercise, we choose to use a Convolutional Neural Network (CNN) that takes as input
-the grayscale images, and outputs a probability map of same shape, where pixels with values close to $1$ must belong to the scapulae, while others must be close to $0$.
+a grayscale image, and outputs a probability map of same shape, where pixels with values close to $1$ must belong to the scapulae, while others must be close to $0$.
 
 While many CNN solutions already exist, e.g. U-Net \cite{ronneberger15}, DeepLab \cite{chen18}, the specificity of this exercise justifies that
 we devise a simpler and shallower architecture, which will relieve both training and inference
@@ -43,6 +50,7 @@ This makes our model much faster in a low-resource scenario.
 In contrast with the original ShuffleNet-v2, we reduce the number
 of stages to $3$ stages (instead of $5$), where each stages contains a
 residual block.
+The last bottleneck layer of our encoder thus provides feature tensor of shape $8\times8\times32$.
 
 *** Decoder
 
@@ -50,13 +58,17 @@ Our decoder follows the approach of \cite{chen18}, where features at the bottlen
 are expanded by a serie of "Atrous" convolutional layers with varying dilation rate, thereby forming an "Atrous Spatial Pyramid Pooling" (ASPP) block.
 Also, low-level features, extracted at the earliest stage of the encoder are concatenated
 to the output of the ASPP block.
-In contrast to \cite{chen18}, we only use $2$ Atrous layers (instead of $4$).
+In contrast to \cite{chen18}, we only use $2$ Atrous layers (instead of $4$) with dilation
+rates $2$ and $4$.
 
+We give an illustration of our architecture on Fig. [[fig:deeplabv3p]].
 
-** Training
+   #+NAME: fig:deeplabv3p
+   #+CAPTION: Illustration the DeepLabv3+ for semantic segmentation. In contrast to the original architecture, we only use 2 Atrous layers (instead of $3$) with dilation rates $2$ and $4$. Figure taken from \cite{chen18}
+   [[./deeplabv3p.png]]
 
-To optimize the parameters of our model, we follow the standard stochastic gradient descent
-approach.
+** Optimization
+
 As loss function, we experiment on the widespread binary cross-entropy loss,
 and further experiment with the Dice loss.
 
@@ -68,9 +80,60 @@ or IoU).
 In particular, we set the Dice-loss to:
 
 \[
-\mathcal{L}_{Dice}(\hat{y}, y) = \frac{2 \hat{y} \otimes y + s}{\sum y + \sum \hat{y} + s}
+\mathcal{L}_{Dice}(\hat{y}, y) = \frac{2 \sum (\hat{y} \odot y) + s}{\sum y + \sum \hat{y} + s}
 \]
 
 where $y$ and $\hat{y}$ are the true and predicted probability tensors, respectively,
 and $s$ is a smoothness coefficient that avoids unstability of gradients when
 the denominator is small.
+
+** Training details
+
+To optimize the parameters of our model, we follow the standard stochastic gradient descent
+approach.
+We split the provided dataset in a training, validation, and test set
+that form $60\%$, $20\%$, and $20\%$ of the full dataset, respectively.
+
+At each epoch, we shuffle the training set and sample batches of size of $12$.
+We set the learning rate to $10^-2$ and reduce to $10^-3$ after $15$ epochs.
+We set the total number of epochs to $20$ by observing the convergence of the loss
+on the validation set.
+
+Our model trains in $\sim 14$ minutes on a 6-core/2.8GHz CPU.
+
+* Results
+
+As evaluation metric, we select the Dice-score given by:
+\[
+D(\hat{y}, y) = 1 - \frac{2 \sum(\hat{y} \odot y)}{\sum y + \sum \hat{y}}
+\]
+
+Quantitative evaluations give a Dice-score of $99.2\%$ for the BCE loss, and $99.4\%$ for there
+Dice loss.
+
+Previews of our predictions are shown on Fig. [[fig:test_prev]].
+While the variation in Dice-score seem minimal, the visual results show that in general
+the background is cleaner and the foreground-background transitions are sharper
+using the Dice-loss.
+
+   #+NAME: fig:test_prev
+   #+CAPTION: Example predictions using the Binary Cross-Entropy loss (BCE), and the Dice loss.
+   [[./test.png]]
+
+* Conclusions
+
+We proposed a simple Deep-Learning strategy to produce segmentation masks of synthetic
+images of scapulae.
+Our architecture proved to be both lightweight, computationally efficient and
+provides good results.
+In particular, we note that the Dice-loss is an interesting alternative to the
+standard BCE-loss in this scenario. It is justified by the fact that it corresponds
+to a metric that is directly interpretable, while it produces sharper and cleaner predictions.
+
+As potential improvements, one could explore the use of Atlases \cite{vakalopoulou18},
+where one pre-defines a set of shapes that the network must adapt using deformation operators.
+This might help to improve on the ambiguous cases where the scapulae and the shoulder do
+not show an obvious separation.
+
+
+\printbibliography
