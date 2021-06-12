@@ -1,0 +1,76 @@
+#+TITLE:  BlueOrtho: Assignment
+#+Author: Laurent Lejeune
+#+OPTIONS: toc:nil
+#+LATEX_HEADER: \usepackage{caption}
+#+LATEX_HEADER: \usepackage{subcaption}
+#+BIBLIOGRAPHY: refs plain
+
+* Context and Goal
+
+In the context of shoulder surgery, we aim at devising an algorithm
+that segments scapulae on CT scans.
+The provided dataset consists of synthetic and simplified shapes that
+represent a humerus and a scapula.
+Furthermore, the images are small ($32\times32$), and contain an important amount of noise.
+
+* Method
+
+For this exercise, we choose to use a Convolutional Neural Network (CNN) that takes as input
+the grayscale images, and outputs a probability map of same shape, where pixels with values close to $1$ must belong to the scapulae, while others must be close to $0$.
+
+While many CNN solutions already exist, e.g. U-Net \cite{ronneberger15}, DeepLab \cite{chen18}, the specificity of this exercise justifies that
+we devise a simpler and shallower architecture, which will relieve both training and inference
+time.
+
+In the next section, we present our architecture and justify the dimensions of
+its components.
+In a second section, we focus on the training objective and suggest two alternatives: Binary cross-entropy and Dice loss.
+Last, we present a simple trick that allows our model to account for spatial invariance.
+
+** Architecture
+
+Our model follows the encoder-decoder principle, where the encoder
+takes an input image to provide
+features, while the decoder generates a probability map from the latter features.
+
+*** Encoder
+
+For the encoder, we take inspiration from ShuffleNet-v2 \cite{ma18}.
+In a nutshell, the latter leverages depth-wise convolutions and
+inverted residual blocks to reduce the memory requirement.
+This makes our model much faster in a low-resource scenario.
+
+In contrast with the original ShuffleNet-v2, we reduce the number
+of stages to $3$ stages (instead of $5$), where each stages contains a
+residual block.
+
+*** Decoder
+
+Our decoder follows the approach of \cite{chen18}, where features at the bottleneck
+are expanded by a serie of "Atrous" convolutional layers with varying dilation rate, thereby forming an "Atrous Spatial Pyramid Pooling" (ASPP) block.
+Also, low-level features, extracted at the earliest stage of the encoder are concatenated
+to the output of the ASPP block.
+In contrast to \cite{chen18}, we only use $2$ Atrous layers (instead of $4$).
+
+
+** Training
+
+To optimize the parameters of our model, we follow the standard stochastic gradient descent
+approach.
+As loss function, we experiment on the widespread binary cross-entropy loss,
+and further experiment with the Dice loss.
+
+The latter addresses the fact that the cross-entropy loss is merely a "proxy" objective,
+i.e. one is usually not interest in minimizing the metric, but rather
+another metric that has a direct interpretation in computer vision (such as Dice-score,
+or IoU).
+
+In particular, we set the Dice-loss to:
+
+\[
+\mathcal{L}_{Dice}(\hat{y}, y) = \frac{2 \hat{y} \otimes y + s}{\sum y + \sum \hat{y} + s}
+\]
+
+where $y$ and $\hat{y}$ are the true and predicted probability tensors, respectively,
+and $s$ is a smoothness coefficient that avoids unstability of gradients when
+the denominator is small.
