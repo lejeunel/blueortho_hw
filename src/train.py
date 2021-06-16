@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
 import os
-from loader import Loader
-import utils as utls
-from torch.utils.data import DataLoader, Dataset, SequentialSampler, Sampler
-import torch
-from torch import optim
-from tqdm import tqdm
-from tensorboardX import SummaryWriter
-from looper import Looper
-from network import MySegmentationModel
-from loss import DiceLoss
 
 import click
-import yaml
 import matplotlib.pyplot as plt
+import torch
+import yaml
+from tensorboardX import SummaryWriter
+from torch import optim
+from torch.utils.data import DataLoader
+import numpy as np
+
+import utils as utls
 from defaults import default_args as args
+from loader import Loader
+from looper import Looper
+from loss import DiceLoss
+from network import MySegmentationModel
 
 
 @click.command()
@@ -81,22 +82,23 @@ from defaults import default_args as args
               '--learning_rate',
               default=args['learning_rate'],
               help='Initial learning rate (lr_scheduler is applied).')
+@click.option('--adam', is_flag=True, help='Use Adam optimizer')
 def train_cmd(in_path: str, out_path: str, epochs: int, train_split: float,
               batch_size: int, learning_rate: float, lr_milestones: list,
               lr_gamma: float, cp_pred: int, decay: float, momentum: float,
               cuda: bool, pos_weight: list, smooth: float, coordconv: bool,
-              bce: bool):
+              bce: bool, adam: bool):
 
     train(in_path, out_path, epochs, train_split, batch_size, learning_rate,
           lr_milestones, lr_gamma, cp_pred, decay, momentum, cuda, pos_weight,
-          smooth, coordconv, bce)
+          smooth, coordconv, bce, adam)
 
 
 def train(in_path: str, out_path: str, epochs: int, train_split: float,
           batch_size: int, learning_rate: float, lr_milestones: list,
           lr_gamma: float, cp_pred: int, decay: float, momentum: float,
           cuda: bool, pos_weight: list, smooth: float, coordconv: bool,
-          bce: bool):
+          bce: bool, adam: bool):
     torch.backends.cudnn.benchmark = True
 
     # create output dir
@@ -132,6 +134,10 @@ def train(in_path: str, out_path: str, epochs: int, train_split: float,
     device = torch.device('cuda' if cuda else 'cpu')
     model = MySegmentationModel(coord_conv=coordconv).to(device)
 
+    model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    print('num. of parameters: ', params)
+
     # create directories
     dirs = {
         'run': out_path,
@@ -150,10 +156,15 @@ def train(in_path: str, out_path: str, epochs: int, train_split: float,
         for k in ['train', 'val']
     }
 
-    optimizer = optim.SGD(model.parameters(),
-                          lr=learning_rate,
-                          momentum=momentum,
-                          weight_decay=decay)
+    if adam:
+        optimizer = optim.Adam(model.parameters(),
+                               lr=learning_rate,
+                               weight_decay=decay)
+    else:
+        optimizer = optim.SGD(model.parameters(),
+                              lr=learning_rate,
+                              momentum=momentum,
+                              weight_decay=decay)
 
     lr_sch = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                   milestones=lr_milestones,

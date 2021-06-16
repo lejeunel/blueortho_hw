@@ -32,7 +32,7 @@ time.
 In the next section, we present our architecture and justify the dimensions of
 its components.
 In a second section, we focus on the training objective and suggest two alternatives: Binary cross-entropy and Dice loss.
-Last, we present a simple trick that allows our model to account for spatial invariance.
+# Last, we present a simple trick that allows our model to account for spatial invariance.
 
 ** Architecture
 
@@ -64,8 +64,9 @@ rates $2$ and $4$.
 We give an illustration of our architecture on Fig. [[fig:deeplabv3p]].
 
    #+NAME: fig:deeplabv3p
-   #+CAPTION: Illustration the DeepLabv3+ for semantic segmentation. In contrast to the original architecture, we only use 2 Atrous layers (instead of $3$) with dilation rates $2$ and $4$. Figure taken from \cite{chen18}
+   #+CAPTION: Illustration of the DeepLabv3+ for semantic segmentation. In contrast to the original architecture, we only use 2 Atrous layers (instead of $3$) with dilation rates $2$ and $4$. Figure taken from \cite{chen18}
    [[./deeplabv3p.png]]
+
 
 ** Optimization
 
@@ -80,7 +81,7 @@ or IoU).
 In particular, we set the Dice-loss to:
 
 \[
-\mathcal{L}_{Dice}(\hat{y}, y) = \frac{2 \sum (\hat{y} \odot y) + s}{\sum y + \sum \hat{y} + s}
+\mathcal{L}_{Dice}(\hat{y}, y) = 1 - \frac{2 \sum (\hat{y} \odot y) + s}{\sum y + \sum \hat{y} + s}
 \]
 
 where $y$ and $\hat{y}$ are the true and predicted probability tensors, respectively,
@@ -107,10 +108,10 @@ Our algorithms are implemented in PyTorch, and the code is available at [[https:
 
 As evaluation metric, we select the Dice-score given by:
 \[
-D(\hat{y}, y) = 1 - \frac{2 \sum(\hat{y} \odot y)}{\sum y + \sum \hat{y}}
+D(\hat{y}, y) = \frac{2 \sum(\hat{y} \odot y)}{\sum y + \sum \hat{y}}
 \]
 
-Quantitative evaluations give a Dice-score of $99.2\%$ for the BCE loss, and $99.4\%$ for there
+Quantitative evaluations give a Dice-score of $99.2\%$ for the BCE loss, and $99.4\%$ for the
 Dice loss.
 
 Previews of our predictions are shown on Fig. [[fig:test_prev]].

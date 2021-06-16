@@ -1,4 +1,4 @@
-% Created 2021-06-12 Sa 18:16
+% Created 2021-06-16 Mi 06:19
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -33,7 +33,7 @@
 \maketitle
 
 \section{Context and Goal}
-\label{sec:orgc505a55}
+\label{sec:org82fb568}
 
 In the context of shoulder surgery, we aim at devising an algorithm
 that segments scapulae on CT scans.
@@ -50,7 +50,7 @@ A preview is shown on Fig. \ref{fig:input_prev}
 \end{figure}
 
 \section{Method}
-\label{sec:org652e2fa}
+\label{sec:orgcc1a353}
 
 For this exercise, we choose to use a Convolutional Neural Network (CNN) that takes as input
 a grayscale image, and outputs a probability map of same shape, where pixels with values close to \(1\) must belong to the scapulae, while others must be close to \(0\).
@@ -62,17 +62,16 @@ time.
 In the next section, we present our architecture and justify the dimensions of
 its components.
 In a second section, we focus on the training objective and suggest two alternatives: Binary cross-entropy and Dice loss.
-Last, we present a simple trick that allows our model to account for spatial invariance.
 
 \subsection{Architecture}
-\label{sec:orga27dfa8}
+\label{sec:org4c83501}
 
 Our model follows the encoder-decoder principle, where the encoder
 takes an input image to provide
 features, while the decoder generates a probability map from the latter features.
 
 \subsubsection{Encoder}
-\label{sec:orgf282f0d}
+\label{sec:orgfa25f78}
 
 For the encoder, we take inspiration from ShuffleNet-v2 \cite{ma18}.
 In a nutshell, the latter leverages depth-wise convolutions and
@@ -85,7 +84,7 @@ residual block.
 The last bottleneck layer of our encoder thus provides feature tensor of shape \(8\times8\times32\).
 
 \subsubsection{Decoder}
-\label{sec:org477c665}
+\label{sec:org341037e}
 
 Our decoder follows the approach of \cite{chen18}, where features at the bottleneck
 are expanded by a serie of ``Atrous'' convolutional layers with varying dilation rate, thereby forming an ``Atrous Spatial Pyramid Pooling'' (ASPP) block.
@@ -99,11 +98,12 @@ We give an illustration of our architecture on Fig. \ref{fig:deeplabv3p}.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=.9\linewidth]{./deeplabv3p.png}
-\caption{\label{fig:deeplabv3p}Illustration the DeepLabv3+ for semantic segmentation. In contrast to the original architecture, we only use 2 Atrous layers (instead of \(3\)) with dilation rates \(2\) and \(4\). Figure taken from \cite{chen18}}
+\caption{\label{fig:deeplabv3p}Illustration of the DeepLabv3+ for semantic segmentation. In contrast to the original architecture, we only use 2 Atrous layers (instead of \(3\)) with dilation rates \(2\) and \(4\). Figure taken from \cite{chen18}}
 \end{figure}
 
+
 \subsection{Optimization}
-\label{sec:orgfa18d66}
+\label{sec:org86c88d6}
 
 As loss function, we experiment on the widespread binary cross-entropy loss,
 and further experiment with the Dice loss.
@@ -116,7 +116,7 @@ or IoU).
 In particular, we set the Dice-loss to:
 
 \[
-\mathcal{L}_{Dice}(\hat{y}, y) = \frac{2 \sum (\hat{y} \odot y) + s}{\sum y + \sum \hat{y} + s}
+\mathcal{L}_{Dice}(\hat{y}, y) = 1 - \frac{2 \sum (\hat{y} \odot y) + s}{\sum y + \sum \hat{y} + s}
 \]
 
 where \(y\) and \(\hat{y}\) are the true and predicted probability tensors, respectively,
@@ -124,7 +124,7 @@ where \(y\) and \(\hat{y}\) are the true and predicted probability tensors, resp
 the denominator is small, and \(\odot\) is the element-wise multiplication operator.
 
 \subsection{Training details and implementation}
-\label{sec:orgf470934}
+\label{sec:org6330d84}
 
 To optimize the parameters of our model, we follow the standard stochastic gradient descent
 approach.
@@ -141,14 +141,14 @@ Our model trains in \(\sim 14\) minutes on a 6-core/2.8GHz CPU.
 Our algorithms are implemented in PyTorch, and the code is available at \url{https://github.com/lejeunel/blueortho\_hw}.
 
 \section{Results}
-\label{sec:org7579694}
+\label{sec:org2e19306}
 
 As evaluation metric, we select the Dice-score given by:
 \[
-D(\hat{y}, y) = 1 - \frac{2 \sum(\hat{y} \odot y)}{\sum y + \sum \hat{y}}
+D(\hat{y}, y) = \frac{2 \sum(\hat{y} \odot y)}{\sum y + \sum \hat{y}}
 \]
 
-Quantitative evaluations give a Dice-score of \(99.2\%\) for the BCE loss, and \(99.4\%\) for there
+Quantitative evaluations give a Dice-score of \(99.2\%\) for the BCE loss, and \(99.4\%\) for the
 Dice loss.
 
 Previews of our predictions are shown on Fig. \ref{fig:test_prev}.
@@ -163,7 +163,7 @@ using the Dice-loss.
 \end{figure}
 
 \section{Conclusions}
-\label{sec:org763e7d7}
+\label{sec:orgfd0379a}
 
 We proposed a simple Deep-Learning strategy to produce segmentation masks of synthetic
 images of scapulae.

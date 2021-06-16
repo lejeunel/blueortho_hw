@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 
-import os
-from glob import glob
-import numpy as np
-
-from torch.utils.data import Dataset
-import matplotlib.pyplot as plt
-import torch
-
-import random
 import pickle
+import random
+
+import numpy as np
+import torch
+from torch.utils.data import Dataset
 
 
 class Loader(Dataset):

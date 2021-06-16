@@ -12,8 +12,9 @@ default_args = {
     'cp_pred': 10,
     'momentum': 0.1,
     'smooth': 0.1,
-    'learning_rate': 1e-2,
+    'learning_rate': 1e-3,
     'coordconv': False,
+    'adam': False,
     'cuda': False,
     'bce': False
 }

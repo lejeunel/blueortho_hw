@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import train
-import click
 import os
+
+import click
+
+import train
 from defaults import default_args
 
 
@@ -41,14 +43,14 @@ def main(in_path: str, out_path: str, cuda: bool):
     else:
         print('dir ', out_path_, 'found. Skipping.')
 
-    # args['coordconv'] = True
-    # args['bce'] = False
-    # out_path = os.path.join(out_path, 'dice_cc')
+    # args_['coordconv'] = True
+    # args_['bce'] = False
+    # out_path = os.path.join(out_path_, 'dice_cc')
     # if not os.path.exists(out_path):
     #     print('training model with Dice loss and coordconv')
     #     train.train(in_path=in_path,
     #                 out_path=os.path.join(out_path, 'dice_cc'),
-    #                 **args)
+    #                 **args_)
     # else:
     #     print('dir ', out_path, 'found. Skipping.')
 
